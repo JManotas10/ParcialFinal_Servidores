@@ -1,0 +1,89 @@
+Servidor de Nagios:
+1. Para la instalación de Nagios en docker se debe instalar docker y docker-compose
+    sudo su
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh	
+    docker –v
+    sudo apt install docker-compose -y
+    docker-compose --version
+2. Pasar el archivo de nagios core con ayuda de WINSCP
+3. Ingresar a la carpeta donde se encuentra el docker-compose.yml
+4. Iniciar Nagios con docker compose
+    docker-compose up -d
+
+Servidor de ngnix:
+1. Al instalar docker y pasar la carpeta de ngnix con su dockerfile, levantar el contenedor
+    docker build -t nginx-custom .
+    docker run -d -p 80:80 --name nginx-container nginx-custom
+2. Verificar en la web con la dirección ip del servidor y el puerto 80
+    http://192.168.1.11:80
+
+Servidor base de datos:
+1. Hacemos lo mismo que se hizo con el servidor nginx, pero el contendor se levanta de la siguiente manera
+    docker-compose up --build
+2.  Verificar en la web con la dirección ip del servidor y el puerto 8080
+    http://192.168.1.13:8080
+Ingresa las creedenciales y listo haz ingresado a la base de datos.
+
+SEGUIMOS CON EL SERVIDOR NAGIOS:
+1. Agregar host y servicios a monitorear (al menos 2 servicios)
+    //Ingresar a este directorio
+     cd /var/lib/docker/volumes/nagios-docker_nagios_config/_data/conf.d
+    //crear un archivo para colocar host
+    nano hosts.cfg
+    //Escribe lo siguiente:
+    define host {
+        use                     linux-server
+        host_name               dockerlinux
+        alias                   My Server nginx
+        address                 192.168.1.11
+        max_check_attempts      5
+        check_period            24x7
+        notification_interval   30
+        notification_period     24x7
+    }
+
+    define service {
+        use                     generic-service
+        host_name               dockerlinux
+        service_description     PING
+        check_command           check_ping!100.0,20%!500.0,60%
+    }
+
+    define service {
+        use                     generic-service
+        host_name               dockerlinux
+        service_description     HTTP
+        check_command           check_http!192.168.1.11!80
+    }
+
+
+
+    define host {
+        use                     linux-server
+        host_name               mysqlserver
+        alias                   My Server mysql
+        address                 192.168.1.13
+        max_check_attempts      5
+        check_period            24x7
+        notification_interval   30
+        notification_period     24x7
+    }
+
+    define service {
+        use                     generic-service
+        host_name               mysqlserver
+        service_description     PING
+        check_command           check_ping!100.0,20%!500.0,60%
+    }
+
+    define service {
+        use                     generic-service
+        host_name               mysqlserver
+        service_description     HTTP
+        check_command           check_http!192.168.1.13!8080
+    }
+    //verificar si no hay errores
+    docker exec -it 99517cfd2d80 nagios -v /opt/nagios/etc/nagios.cfg
+    //reiniciar nagios
+    docker exec -it 99517cfd2d80 pkill nagios

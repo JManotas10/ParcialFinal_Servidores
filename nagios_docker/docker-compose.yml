@@ -1,0 +1,21 @@
+version: '3.3'
+
+services:
+  nagios:
+    image: jasonrivers/nagios:latest 
+    container_name: nagios
+    ports:
+      - "8080:80"  
+    volumes:
+      - nagios_config:/opt/nagios/etc       
+      - nagios_var:/var/nagios              
+      - nagios_plugins:/opt/Custom-Nagios-Plugins  
+    environment:
+      - NAGIOSADMIN_USER=nagiosadmin            
+      - NAGIOSADMIN_PASS=12345            
+    restart: unless-stopped
+
+volumes:
+  nagios_config:
+  nagios_var:
+  nagios_plugins:
